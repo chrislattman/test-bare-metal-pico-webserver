@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}",
+                "/home/chris/pico-sdk/src/**",
+                "/home/chris/pico-sdk/lib/cyw43-driver/**",
+                "/home/chris/pico-sdk/lib/lwip/**",
+                "/home/chris/FreeRTOS-Kernel/include",
+                "/home/chris/FreeRTOS-Kernel/portable/ThirdParty/GCC/RP2350_ARM_NTZ/non_secure",
+                "/home/chris/pico-sdk/src/rp2_common/hardware_sync/include",
+                "/home/chris/pico-sdk/src/rp2_common/hardware_sync_spin_lock/include/"
+            ],
+            "defines": ["WIFI_SSID", "WIFI_PASSWORD"],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}
