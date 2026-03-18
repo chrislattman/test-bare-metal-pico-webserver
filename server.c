@@ -28,7 +28,7 @@ static void thread_task(void *params)
     int client_socket;
     struct in_addr client_address;
 
-    if (xSemaphoreTake(mutex, 10) == pdTRUE) {
+    if (xSemaphoreTake(mutex, 10)) {
         ++counter;
         xSemaphoreGive(mutex);
     }
