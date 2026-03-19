@@ -83,12 +83,21 @@ static void main_task(void *params)
     cyw43_arch_enable_sta_mode();
     status = cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000);
     if (status != PICO_OK) {
-        // If the link fails, blink the LED
+        // If the link fails, blink the LED once
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
         vTaskDelay(500 / portTICK_PERIOD_MS);
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
         vTaskDelete(NULL);
     }
+
+    // If the link succeeds, blink the LED twice and quickly
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+    vTaskDelay(250 / portTICK_PERIOD_MS);
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+    vTaskDelay(250 / portTICK_PERIOD_MS);
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+    vTaskDelay(250 / portTICK_PERIOD_MS);
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 
     mutex = xSemaphoreCreateMutex();
 
