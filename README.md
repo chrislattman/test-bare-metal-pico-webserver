@@ -6,23 +6,14 @@ While this repo implements its own HTTP server, a popular embedded C web server 
 
 Instructions:
 
-- Clone https://github.com/raspberrypi/pico-sdk
-- In `~/.bashrc` add `export PICO_SDK_PATH=/path/to/pico-sdk`
-- In the `pico-sdk` folder run `git submodule update --init`
-- Run `sudo apt install build-essential cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib`
-- Clone https://github.com/raspberrypi/picotool
-- Run `sudo apt install pkg-config libusb-1.0-0-dev`
-- In `~/.bashrc` add `export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig/"`
-- In the `picotool` folder run 
+- Run `git submodule update --init --recursive`
+- Run `sudo apt install gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib`
+- In `~/.bashrc` add
     ```
-    cmake -S . -B build
-    cmake --build build
-    sudo cmake --install build
-    sudo cp udev/60-picotool.rules /etc/udev/rules.d/
-    sudo udevadm control --reload
+    export PICO_SDK_PATH=/path/to/test-bare-metal-pico-webserver/pico-sdk
+    export FREERTOS_KERNEL_PATH=/path/to/test-bare-metal-pico-webserver/FreeRTOS-Kernel
     ```
-- Clone https://github.com/raspberrypi/FreeRTOS-Kernel
-- In `~/.bashrc` add `export FREERTOS_KERNEL_PATH=/path/to/FreeRTOS-Kernel`
+- Follow the instructions at https://github.com/chrislattman/test-bare-metal-pico to install picotool if you haven't already
 - You need to set the `WIFI_SSID` and `WIFI_PASSWORD` environment variables for this example to work
 
 To generate Makefiles: `cmake -DPICO_BOARD=pico2_w -DCMAKE_C_COMPILER:FILEPATH=/usr/bin/arm-none-eabi-gcc -DCMAKE_CXX_COMPILER:FILEPATH=/usr/bin/arm-none-eabi-g++ -S . -B build`
