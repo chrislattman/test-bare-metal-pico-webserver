@@ -28,6 +28,8 @@ target_link_libraries(server
     FreeRTOS-Kernel-Heap4
     )
 
+pico_enable_stdio_usb(server 1)
+pico_enable_stdio_uart(server 1)
 pico_add_extra_outputs(server)
 
 add_compile_options(-Wall

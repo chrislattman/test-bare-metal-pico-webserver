@@ -1,6 +1,7 @@
 #include <pico/cyw43_arch.h>
 #include <pico/stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "lwip/ip4_addr.h"
 #include "lwip/sockets.h"
@@ -139,6 +140,7 @@ static void main_task(void *params)
                 goto cleanup;
             }
         }
+        printf("%s\n", client_message);
 
         socket_info = (sock_info) {
             .client_socket = client_socket,
