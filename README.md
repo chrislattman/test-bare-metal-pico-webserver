@@ -6,7 +6,8 @@ While this repo implements its own HTTP server, a popular embedded C web server 
 
 Instructions:
 
-- Run `git submodule update --init --recursive`
+- Run `git submodule update --init --recursive && git config submodule.pico-sdk.ignore all`
+- Run `sed -i "s/-DPICOTOOL_NO_LIBUSB=1/-DPICOTOOL_NO_LIBUSB=0/g" pico-sdk/tools/Findpicotool.cmake`
 - Run `sudo apt install gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib`
 - You need to set the `WIFI_SSID` and `WIFI_PASSWORD` environment variables for this example to work
 
@@ -28,5 +29,5 @@ To run on board:
 
 - Unplug USB cable from board
 - Hold down BOOTSEL button while plugging in USB cable
-- Run `cp build/server.uf2 /media/$USER/RP2350` (flashes the board with the .uf2 file)
-    - Alternatively, run `build/_deps/picotool/picotool load -u -v -x build/server.elf`
+- Run `sudo cp build/server.uf2 /media/$USER/RP2350` (flashes the board with the .uf2 file)
+    - Alternatively, run `./build/_deps/picotool/picotool load -u -v -x build/server.elf`
