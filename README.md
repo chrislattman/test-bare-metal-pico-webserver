@@ -23,11 +23,8 @@ cmake -DPICO_BOARD=pico2_w \
     -S . -B build
 ```
 
-To build application: `cmake --build build`
-
-To run on board: 
+To build application and run on board: 
 
 - Unplug USB cable from board
 - Hold down BOOTSEL button while plugging in USB cable
-- Run `sudo cp build/server.uf2 /media/$USER/RP2350` (flashes the board with the .uf2 file)
-    - Alternatively, run `./build/_deps/picotool/picotool load -u -v -x build/server.elf`
+- Run `cmake --build build --target run`
