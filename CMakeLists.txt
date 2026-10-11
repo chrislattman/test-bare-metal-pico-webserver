@@ -43,4 +43,6 @@ endif()
 add_custom_target(run
     COMMAND "${CMAKE_BINARY_DIR}/_deps/picotool/picotool" load -u -v -x "${CMAKE_BINARY_DIR}/hello_world.elf"
     DEPENDS hello_world
+    USES_TERMINAL
+    VERBATIM
 )
