@@ -194,7 +194,17 @@ static void main_task(__attribute__((unused)) void *params)
             .client_socket = client_socket,
             .client_address = client_connection.sin_addr,
         };
-        // FreeRTOS tasks delete themselves when done (like detached pthreads)
+        // FreeRTOS tasks delete themselves when done (like detached pthreads).
+        //
+        // lwIP's rule is that threads which call lwIP should be created with
+        // sys_thread_new(), so a port can do per-thread setup (e.g. the
+        // per-thread semaphores of LWIP_NETCONN_SEM_PER_THREAD). This port's
+        // sys_thread_new() is just a wrapper around xTaskCreate() and that
+        // option is off, so xTaskCreate() is equivalent here. It's used
+        // because sys_thread_new() asserts when out of memory instead of
+        // returning an error, and this way the connection can be dropped
+        // cleanly. If LWIP_NETCONN_SEM_PER_THREAD is ever enabled, switch to
+        // sys_thread_new() (note its stack size is in bytes, not words).
         if (xTaskCreate(client_handler, "ClientThread", 2048, socket_info,
                 THREAD_TASK_PRIORITY, NULL) != pdPASS) {
             fprintf(stderr, "xTaskCreate: out of memory\n");
@@ -215,9 +225,14 @@ int main()
 {
     TaskHandle_t task;
 
+    // xTaskCreate() rather than sys_thread_new(): see the note in main_task
     xTaskCreate(main_task, "MainThread", 4096, NULL, MAIN_TASK_PRIORITY, &task);
 
     vTaskStartScheduler();
 
+    // vTaskStartScheduler() only returns if there wasn't enough FreeRTOS heap
+    // to create the idle or timer task. Returning from main() on bare metal
+    // isn't meaningful, so stop here instead.
+    while (1);
     return 0;
 }
