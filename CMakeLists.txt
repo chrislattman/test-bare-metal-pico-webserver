@@ -41,8 +41,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 endif()
 
 add_custom_target(run
-    COMMAND "${CMAKE_BINARY_DIR}/_deps/picotool/picotool" load -u -v -x "${CMAKE_BINARY_DIR}/hello_world.elf"
-    DEPENDS hello_world
+    COMMAND "${CMAKE_BINARY_DIR}/_deps/picotool/picotool" load -u -v -x "${CMAKE_BINARY_DIR}/server.elf"
+    DEPENDS server
     USES_TERMINAL
     VERBATIM
 )

@@ -1,5 +1,6 @@
 #include <pico/cyw43_arch.h>
 #include <pico/stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -17,26 +18,48 @@ static const unsigned short PORT_NUMBER = 8080;
 static SemaphoreHandle_t mutex;
 static unsigned int counter = 0;
 
-typedef struct sock_info {
-    int             client_socket;
-    struct in_addr  client_address;
-} sock_info;
+static void close_client(int client_socket)
+{
+    shutdown(client_socket, SHUT_WR);
+    close(client_socket);
+}
 
+// One task per connection: read the request, answer it, close.
 static void thread_task(void *params)
 {
-    char server_message[512], content[128], content_length[32];
-    sock_info *socket_info;
-    int client_socket;
-    struct in_addr client_address;
+    char client_message[1024], server_message[512], content[128], content_length[32];
+    char *headers_begin;
+    int client_socket, n;
+    struct sockaddr_in client_connection;
+    socklen_t client_connection_size = (socklen_t)sizeof(client_connection);
+
+    // The socket is passed by value, so main_task can accept() again right away
+    client_socket = (int)(intptr_t)params;
+
+    // Reading happens here rather than in main_task so that a slow or silent
+    // client only stalls its own task, not the accept loop
+    n = recv(client_socket, client_message, sizeof(client_message) - 1, 0);
+    if (n <= 0) {
+        close_client(client_socket);
+        vTaskDelete(NULL);
+    }
+    client_message[n] = '\0';
+
+    headers_begin = strstr(client_message, "\r\n");
+    if (headers_begin != NULL) {
+        *headers_begin = '\0';
+    }
+    // Only accepting HTTP GET requests
+    if (strncmp(client_message, "GET", 3) != 0) {
+        close_client(client_socket);
+        vTaskDelete(NULL);
+    }
+    printf("%s\n", client_message);
 
     if (xSemaphoreTake(mutex, 10)) {
         ++counter;
         xSemaphoreGive(mutex);
     }
-
-    socket_info = (sock_info *)params;
-    client_socket = socket_info->client_socket;
-    client_address = socket_info->client_address;
 
     strcpy(server_message, "HTTP/1.1 200 OK\r\n");
     strcat(server_message, "Server: Raspberry Pi Pico 2 W\r\n");
@@ -44,7 +67,11 @@ static void thread_task(void *params)
     strcat(server_message, "Accept-Ranges: bytes\r\n");
 
     strcpy(content, "What's up? This server was written in embedded C. Your IP address is ");
-    inet_ntop(AF_INET, &client_address, content + strlen(content), INET_ADDRSTRLEN);
+    if (getpeername(client_socket, (struct sockaddr *)&client_connection, &client_connection_size) == 0) {
+        inet_ntop(AF_INET, &client_connection.sin_addr, content + strlen(content), INET_ADDRSTRLEN);
+    } else {
+        strcat(content, "unknown");
+    }
     strcat(content, "\r\n");
 
     sprintf(content_length, "Content-Length: %zu\r\n", strlen(content));
@@ -52,15 +79,9 @@ static void thread_task(void *params)
     strcat(server_message, "Content-Type: text/html\r\n\r\n");
     strcat(server_message, content);
 
-    if (send(client_socket, server_message, strlen(server_message), 0) < 0) {
-        vTaskDelete(NULL);
-    }
-    if (shutdown(client_socket, SHUT_WR) < 0) {
-        vTaskDelete(NULL);
-    }
-    if (close(client_socket) < 0) {
-        vTaskDelete(NULL);
-    }
+    // Always close the socket, even if send fails, so lwIP doesn't run out of sockets
+    send(client_socket, server_message, strlen(server_message), 0);
+    close_client(client_socket);
     vTaskDelete(NULL);
 }
 
@@ -68,11 +89,9 @@ static void thread_task(void *params)
 // https://visualgdb.com/tutorials/raspberry/pico_w/freertos/
 static void main_task(void *params)
 {
-    int status, server_socket, client_socket, request_line_length;
+    int status, server_socket, client_socket;
     struct sockaddr_in server_connection, client_connection;
-    char client_message[1024], *headers_begin;
-    sock_info socket_info;
-    socklen_t client_connection_size = (socklen_t)sizeof(client_connection);
+    socklen_t client_connection_size;
     
     stdio_init_all();
     status = cyw43_arch_init();
@@ -119,34 +138,18 @@ static void main_task(void *params)
     }
 
     while (1) {
-        memset(&client_connection, 0, sizeof(client_connection));
+        client_connection_size = (socklen_t)sizeof(client_connection);
         if ((client_socket = accept(server_socket, (struct sockaddr *)&client_connection, &client_connection_size)) < 0) {
-            goto cleanup;
+            // Usually a temporary shortage of lwIP sockets/memory; keep serving
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            continue;
         }
 
-        if (recv(client_socket, client_message, sizeof(client_message), 0) < 0) {
-            goto cleanup;
+        if (xTaskCreate(thread_task, "ClientThread", 2048, (void *)(intptr_t)client_socket,
+                THREAD_TASK_PRIORITY, NULL) != pdPASS) {
+            // Out of heap for a new task; drop this connection but keep serving
+            close_client(client_socket);
         }
-
-        headers_begin = strstr(client_message, "\r\n");
-        request_line_length = headers_begin - client_message;
-        client_message[request_line_length] = '\0';
-        // Only accepting HTTP GET requests
-        if (strncmp(client_message, "GET", 3) != 0) {
-            if (shutdown(client_socket, SHUT_WR) < 0) {
-                goto cleanup;
-            }
-            if (close(client_socket) < 0) {
-                goto cleanup;
-            }
-        }
-        printf("%s\n", client_message);
-
-        socket_info = (sock_info) {
-            .client_socket = client_socket,
-            .client_address = client_connection.sin_addr,
-        };
-        xTaskCreate(thread_task, "ClientThread", 2048, &socket_info, THREAD_TASK_PRIORITY, NULL);
     }
 
 cleanup:
