@@ -14,7 +14,7 @@ Instructions:
 To generate Makefiles:
 
 ```
-PICO_SDK_PATH=$(git rev-parse --show-toplevel)/pico-sdk \
+PICO_SDK_PATH=$(git rev-parse --show-toplevel)/pico-sdk
 FREERTOS_KERNEL_PATH=$(git rev-parse --show-toplevel)/FreeRTOS-Kernel \
 cmake -DPICO_BOARD=pico2_w \
     -DCMAKE_C_COMPILER:FILEPATH=/usr/bin/arm-none-eabi-gcc \
