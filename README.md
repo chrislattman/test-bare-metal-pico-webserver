@@ -16,11 +16,7 @@ To generate Makefiles:
 ```
 PICO_SDK_PATH=$(git rev-parse --show-toplevel)/pico-sdk
 FREERTOS_KERNEL_PATH=$(git rev-parse --show-toplevel)/FreeRTOS-Kernel \
-cmake -DPICO_BOARD=pico2_w \
-    -DCMAKE_C_COMPILER:FILEPATH=/usr/bin/arm-none-eabi-gcc \
-    -DCMAKE_CXX_COMPILER:FILEPATH=/usr/bin/arm-none-eabi-g++ \
-    -DPICOTOOL_FORCE_FETCH_FROM_GIT=ON \
-    -S . -B build
+cmake -DPICO_BOARD=pico2_w -DPICOTOOL_FORCE_FETCH_FROM_GIT=ON -S . -B build
 ```
 
 To build application and run on board: 
