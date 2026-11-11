@@ -14,8 +14,8 @@ Instructions:
 To generate Makefiles:
 
 ```
-PICO_SDK_PATH=$(git rev-parse --show-toplevel)/pico-sdk
-FREERTOS_KERNEL_PATH=$(git rev-parse --show-toplevel)/FreeRTOS-Kernel
+PICO_SDK_PATH=$(git rev-parse --show-toplevel)/pico-sdk \
+FREERTOS_KERNEL_PATH=$(git rev-parse --show-toplevel)/FreeRTOS-Kernel \
 cmake -DPICO_BOARD=pico2_w -DPICOTOOL_FORCE_FETCH_FROM_GIT=ON -S . -B build
 ```
 
